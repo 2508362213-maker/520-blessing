@@ -514,9 +514,11 @@ body {
     <text x="72" y="30" font-size="10" fill="#ff69b4">&#9829;</text>
     <text x="20" y="35" font-size="7" fill="#c898d8">&#10022;</text>
   </svg>
-  <div class="success-text">收到啦！奶茶马上安排～</div>
+  <div class="success-text">选好啦！最后一步～</div>
   <div class="neon-line"></div>
-  <div class="success-sub">520快乐，今天也要开开心心的喵～</div>
+  <div class="success-sub">把你的选择告诉TA，奶茶马上安排</div>
+  <button class="submit-btn share-btn" id="shareBtn" style="width:80%;max-width:300px;margin-top:25px;">发给TA</button>
+  <div class="success-sub" id="shareTip" style="margin-top:12px;opacity:0;transition:opacity 0.3s;font-size:13px;"></div>
 </div>
 
 <script>
@@ -666,50 +668,55 @@ function showToast(msg) {
   setTimeout(() => t.remove(), 2500);
 }
 
-// ===== 钉钉机器人配置 =====
-const DINGTALK_WEBHOOK = 'https://oapi.dingtalk.com/robot/send?access_token=542302a849715b40b344ebf816b6c29b5bdb7d365c66a8a90981c2d9b15c5894';
-const DINGTALK_SECRET  = 'SEC0d44e2519dcf06485de21f985b593de806ce480f9803b9548c5e4666d00ed7e4';
-
-async function getSignedUrl() {
-  const ts = Date.now();
-  const str = ts + '\n' + DINGTALK_SECRET;
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(DINGTALK_SECRET), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(str));
-  const sign = encodeURIComponent(btoa(String.fromCharCode(...new Uint8Array(sig))));
-  return `${DINGTALK_WEBHOOK}&timestamp=${ts}&sign=${sign}`;
-}
+// ===== 数据处理 =====
 
 function sendData(data) {
-  sendToDingTalk(data);
+  const msg = `520奶茶订单\n\n` +
+    `姓名：${data.name}\n` +
+    `地址：${data.address}\n` +
+    `手机号：${data.phone}\n` +
+    `类型：${data.type}\n` +
+    `甜度：${data.sweet || '未选'}\n` +
+    `冰度：${data.ice || '未选'}`;
+  window._orderMsg = msg;
   console.log('📋 奶茶订单:', JSON.stringify(data, null, 2));
 }
 
-async function sendToDingTalk(data) {
-  try {
-    const url = await getSignedUrl();
-    const body = JSON.stringify({
-      msgtype: 'markdown',
-      markdown: {
-        title: '🧋 520奶茶订单',
-        text: `### 🧋 520奶茶订单来啦！\n\n` +
-              `- **姓名**：${data.name}\n` +
-              `- **地址**：${data.address}\n` +
-              `- **手机号**：${data.phone}\n` +
-              `- **类型**：${data.type}\n` +
-              `- **甜度**：${data.sweet || '未选'}\n` +
-              `- **冰度**：${data.ice || '未选'}\n` +
-              `- **提交时间**：${data.time}\n`
-      }
-    });
+// ===== 分享按钮逻辑 =====
+document.getElementById('shareBtn').addEventListener('click', async function() {
+  const msg = window._orderMsg || '';
+  const shareTip = document.getElementById('shareTip');
 
-    // 方式1：no-cors 直发（无预检请求，钉钉域名在国内直连，大概率成功）
-    fetch(url, { method:'POST', mode:'no-cors', body });
-    console.log('📡 已发送到钉钉（no-cors）');
-  } catch (e) {
-    console.log('⚠️ 发送异常:', e);
+  // 优先用手机原生分享（Web Share API）
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: '520奶茶订单', text: msg });
+      shareTip.textContent = '已分享成功～ 520快乐！';
+      shareTip.style.opacity = '1';
+      return;
+    } catch (e) {
+      // 用户取消分享，走剪贴板方案
+    }
   }
-}
+
+  // 降级方案：复制到剪贴板
+  try {
+    await navigator.clipboard.writeText(msg);
+    shareTip.textContent = '已复制到剪贴板，快去粘贴发给TA吧～';
+    shareTip.style.opacity = '1';
+  } catch (e) {
+    // 兼容不支持 clipboard API 的浏览器
+    const ta = document.createElement('textarea');
+    ta.value = msg;
+    ta.style.cssText = 'position:fixed;left:-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    shareTip.textContent = '已复制到剪贴板，快去粘贴发给TA吧～';
+    shareTip.style.opacity = '1';
+  }
+});
 
 // ===== 背景音乐：Web Audio API 生成轻柔旋律 =====
 let bgmStarted = false;
