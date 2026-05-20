@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>520 Special</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'ZCOOL KuaiLe', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #0a0015;
+}
+
+.page { 
+  display: none; 
+  min-height: 100vh; 
+  padding: 20px;
+  animation: fadeIn 0.6s ease;
+}
+.page.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes glow { 0%,100% { filter: drop-shadow(0 0 8px rgba(255,130,200,0.6)); } 50% { filter: drop-shadow(0 0 20px rgba(255,130,200,0.9)); } }
+@keyframes twinkle { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes catBlink { 0%,45%,55%,100% { d: path("M 22 20 Q 25 18 28 20"); } 48%,52% { d: path("M 22 20 L 28 20"); } }
+@keyframes tailWag { 0%,100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+@keyframes sparkleFloat { 
+  0% { transform: translateY(0) scale(0); opacity: 0; }
+  20% { transform: translateY(-10px) scale(1); opacity: 1; }
+  100% { transform: translateY(-80px) scale(0.3); opacity: 0; }
+}
+@keyframes neonPulse {
+  0%,100% { text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 40px #ff1493; }
+  50% { text-shadow: 0 0 5px #ff69b4, 0 0 10px #ff69b4, 0 0 20px #ff1493; }
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes heartRain {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(360deg); opacity: 0.3; }
+}
+
+/* ===== 星空背景 ===== */
+.starfield {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.star {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle 2s infinite;
+}
+
+/* ===== 第一页 ===== */
+#page1 {
+  background: linear-gradient(180deg, #0a0015 0%, #1a0030 40%, #2d1b4e 100%);
+  position: relative;
+}
+.input-cat-container {
+  position: relative;
+  margin-bottom: 30px;
+}
+.anime-cat {
+  width: 150px; height: 150px;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 15px rgba(255,130,200,0.5));
+}
+.input-title {
+  font-size: 22px;
+  color: #ffb8e0;
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: 1.8;
+  text-shadow: 0 0 10px rgba(255,184,224,0.5);
+}
+.input-hint {
+  font-size: 15px;
+  color: #c898d8;
+  margin-bottom: 15px;
+  padding: 8px 20px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(200,152,216,0.3);
+}
+.magic-input {
+  width: 85%;
+  max-width: 300px;
+  padding: 14px 24px;
+  border: 2px solid rgba(255,130,200,0.4);
+  border-radius: 25px;
+  font-size: 18px;
+  text-align: center;
+  background: rgba(255,255,255,0.08);
+  color: #ffd6ee;
+  outline: none;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+  font-family: inherit;
+}
+.magic-input:focus {
+  border-color: #ff82c8;
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 0 25px rgba(255,130,200,0.3), inset 0 0 15px rgba(255,130,200,0.1);
+}
+.magic-input::placeholder { color: rgba(255,184,224,0.5); }
+.error-msg {
+  color: #ff9ed2;
+  font-size: 14px;
+  margin-top: 12px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(255,105,180,0.1);
+  border: 1px solid rgba(255,105,180,0.2);
+  opacity: 0;
+  transform: translateY(5px);
+  transition: all 0.3s;
+}
+.error-msg.show { opacity: 1; transform: translateY(0); }
+
+/* ===== 第二页 ===== */
+#page2 {
+  background: linear-gradient(180deg, #0a0015 0%, #1a0030 30%, #3d1155 70%, #1a0030 100%);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.blessing-container {
+  position: relative;
+  z-index: 2;
+}
+.big-cat-container {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: float 3s ease-in-out infinite;
+  transition: transform 0.2s;
+}
+.big-cat-container:active { transform: scale(1.08); }
+.big-cat-svg {
+  width: 200px; height: 200px;
+  filter: drop-shadow(0 0 20px rgba(255,130,200,0.6));
+}
+.blessing-text {
+  font-size: 32px;
+  color: #ff82c8;
+  font-weight: bold;
+  margin: 20px 0 10px;
+  animation: neonPulse 2s infinite;
+}
+.blessing-sub {
+  font-size: 16px;
+  color: #d4a0e8;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+.cat-speech {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,130,200,0.3);
+  border-radius: 20px;
+  padding: 15px 25px;
+  font-size: 16px;
+  color: #ffcce8;
+  box-shadow: 0 4px 20px rgba(255,105,180,0.15);
+  position: relative;
+  margin-top: 25px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.6s ease;
+}
+.cat-speech.show { opacity: 1; transform: translateY(0); }
+.cat-speech::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%; margin-left: -8px;
+  border: 8px solid transparent;
+  border-bottom-color: rgba(255,255,255,0.1);
+}
+
+/* 飘落爱心 */
+.hearts-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.heart-particle {
+  position: absolute;
+  top: -30px;
+  animation: heartRain linear infinite;
+  opacity: 0.7;
+}
+
+/* ===== 表单弹窗 ===== */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10,0,21,0.7);
+  backdrop-filter: blur(5px);
+  z-index: 100;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.3s;
+}
+.overlay.active { display: flex; }
+
+.toast-form {
+  background: linear-gradient(180deg, #1e0a35 0%, #150825 100%);
+  border: 1px solid rgba(255,130,200,0.2);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 30px 25px 40px;
+  animation: slideUp 0.4s ease;
+}
+.toast-title {
+  font-size: 22px;
+  color: #ff82c8;
+  text-align: center;
+  margin-bottom: 25px;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255,130,200,0.5);
+}
+.form-group { margin-bottom: 18px; }
+.form-label {
+  font-size: 14px;
+  color: #c898d8;
+  margin-bottom: 8px;
+  display: block;
+}
+.form-input {
+  width: 100%;
+  padding: 13px 18px;
+  border: 1.5px solid rgba(255,130,200,0.25);
+  border-radius: 14px;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s;
+  background: rgba(255,255,255,0.05);
+  color: #ffd6ee;
+  font-family: inherit;
+}
+.form-input:focus {
+  border-color: #ff82c8;
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 15px rgba(255,130,200,0.2);
+}
+.form-input::placeholder { color: rgba(200,152,216,0.5); }
+
+.form-options { display: flex; gap: 10px; flex-wrap: wrap; }
+.form-option {
+  padding: 9px 16px;
+  border: 1.5px solid rgba(255,130,200,0.25);
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: rgba(255,255,255,0.05);
+  color: #d4a0e8;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.form-option.selected {
+  background: linear-gradient(135deg, #ff1493, #ff69b4);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 0 12px rgba(255,20,147,0.4);
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #ff1493, #9b30ff);
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 22px;
+  transition: all 0.3s;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 20px rgba(255,20,147,0.3);
+  font-family: inherit;
+}
+.submit-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 10px rgba(255,20,147,0.5);
+}
+
+/* ===== 成功页 ===== */
+.success-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, #0a0015 0%, #2d1b4e 100%);
+  z-index: 200;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.5s;
+  text-align: center;
+  padding: 20px;
+}
+.success-overlay.active { display: flex; }
+.success-cat-svg { width: 120px; height: 120px; animation: float 2s ease-in-out infinite; filter: drop-shadow(0 0 15px rgba(255,130,200,0.6)); }
+.success-text { font-size: 22px; color: #ff82c8; margin: 25px 0 12px; text-shadow: 0 0 10px rgba(255,130,200,0.5); }
+.success-sub { font-size: 15px; color: #c898d8; }
+
+/* 霓虹装饰线 */
+.neon-line {
+  width: 60%;
+  max-width: 200px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff69b4, transparent);
+  margin: 15px auto;
+  border-radius: 1px;
+  box-shadow: 0 0 8px #ff69b4;
+}
+</style>
+</head>
+<body>
+
+<!-- 星空背景 -->
+<div class="starfield" id="starfield"></div>
+
+<!-- 第一页：输入暗号 -->
+<div id="page1" class="page active">
+  <div class="input-cat-container">
+    <svg class="anime-cat" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <!-- 猫身体 -->
+      <ellipse cx="50" cy="62" rx="25" ry="22" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.5"/>
+      <!-- 猫头 -->
+      <circle cx="50" cy="38" r="20" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.5"/>
+      <!-- 猫耳朵 -->
+      <polygon points="34,22 38,8 44,22" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.5"/>
+      <polygon points="56,22 62,8 66,22" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.5"/>
+      <polygon points="36,20 39,12 43,21" fill="#ffb3d9"/>
+      <polygon points="57,20 61,12 64,21" fill="#ffb3d9"/>
+      <!-- 猫眼睛 - 大大的水汪汪 -->
+      <ellipse cx="43" cy="37" rx="5" ry="5.5" fill="#2d1b4e"/>
+      <ellipse cx="57" cy="37" rx="5" ry="5.5" fill="#2d1b4e"/>
+      <circle cx="41" cy="35" r="2" fill="#fff"/>
+      <circle cx="55" cy="35" r="2" fill="#fff"/>
+      <circle cx="44" cy="39" r="1" fill="rgba(255,255,255,0.5)"/>
+      <circle cx="58" cy="39" r="1" fill="rgba(255,255,255,0.5)"/>
+      <!-- 猫鼻子 -->
+      <ellipse cx="50" cy="43" rx="2" ry="1.5" fill="#ff82c8"/>
+      <!-- 猫嘴 - 微笑 -->
+      <path d="M 46 45 Q 50 49 54 45" fill="none" stroke="#ff82c8" stroke-width="1.2" stroke-linecap="round"/>
+      <!-- 腮红 -->
+      <ellipse cx="38" cy="42" rx="3.5" ry="2" fill="rgba(255,105,180,0.3)"/>
+      <ellipse cx="62" cy="42" rx="3.5" ry="2" fill="rgba(255,105,180,0.3)"/>
+      <!-- 猫尾巴 -->
+      <path d="M 73 65 Q 85 55 80 45 Q 78 40 82 38" fill="none" stroke="#ffd6ee" stroke-width="4" stroke-linecap="round" style="animation: tailWag 2s ease-in-out infinite; transform-origin: 73px 65px;"/>
+      <!-- 猫爪子 -->
+      <ellipse cx="38" cy="80" rx="6" ry="4" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1"/>
+      <ellipse cx="62" cy="80" rx="6" ry="4" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1"/>
+      <!-- 星星装饰 -->
+      <text x="20" y="15" font-size="6" fill="#ff82c8" opacity="0.7">&#10022;</text>
+      <text x="78" y="20" font-size="8" fill="#c898d8" opacity="0.6">&#10022;</text>
+    </svg>
+  </div>
+  <div class="input-title">嘿～想看点好东西吗？<br>先说个暗号吧～</div>
+  <div class="input-hint" id="hintText">提示：夸夸自己 ~</div>
+  <input class="magic-input" id="secretInput" type="text" placeholder="输入暗号..." autocomplete="off">
+  <div class="error-msg" id="errorMsg">不对哦～ 答案是「我今天真可爱」</div>
+</div>
+
+<!-- 第二页：猫猫祝福 -->
+<div id="page2" class="page">
+  <div class="hearts-bg" id="heartsBg"></div>
+  <div class="blessing-container">
+    <div class="blessing-text">520 快乐 !</div>
+    <div class="neon-line"></div>
+    <div class="blessing-sub">愿你每天都像今天一样可爱</div>
+    <div class="big-cat-container" id="bigCat">
+      <svg class="big-cat-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- 身体 -->
+        <ellipse cx="50" cy="64" rx="28" ry="24" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.2"/>
+        <!-- 头 -->
+        <circle cx="50" cy="36" r="22" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.2"/>
+        <!-- 耳朵 -->
+        <polygon points="32,18 36,2 42,18" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.2"/>
+        <polygon points="58,18 64,2 68,18" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.2"/>
+        <polygon points="34,16 37,7 41,17" fill="#ffb3d9"/>
+        <polygon points="59,16 63,7 67,17" fill="#ffb3d9"/>
+        <!-- 大眼睛 - 超萌 -->
+        <ellipse cx="41" cy="35" rx="6.5" ry="7" fill="#2d1b4e"/>
+        <ellipse cx="59" cy="35" rx="6.5" ry="7" fill="#2d1b4e"/>
+        <!-- 高光 -->
+        <circle cx="38.5" cy="32.5" r="2.8" fill="#fff"/>
+        <circle cx="56.5" cy="32.5" r="2.8" fill="#fff"/>
+        <circle cx="42.5" cy="37" r="1.2" fill="rgba(255,255,255,0.6)"/>
+        <circle cx="60.5" cy="37" r="1.2" fill="rgba(255,255,255,0.6)"/>
+        <!-- 心形瞳孔 -->
+        <path d="M 40 35 Q 40 33.5 41 33.5 Q 42 33.5 42 35 Q 42 36 41 37 Q 40 36 40 35 Z" fill="#ff69b4" opacity="0.6"/>
+        <path d="M 58 35 Q 58 33.5 59 33.5 Q 60 33.5 60 35 Q 60 36 59 37 Q 58 36 58 35 Z" fill="#ff69b4" opacity="0.6"/>
+        <!-- 鼻子 -->
+        <path d="M 48.5 43 L 50 45 L 51.5 43 Z" fill="#ff69b4"/>
+        <!-- 嘴 - 开心猫嘴 -->
+        <path d="M 44 46 Q 47 50 50 47 Q 53 50 56 46" fill="none" stroke="#ff82c8" stroke-width="1.3" stroke-linecap="round"/>
+        <!-- 腮红 -->
+        <ellipse cx="34" cy="41" rx="4" ry="2.5" fill="rgba(255,105,180,0.35)"/>
+        <ellipse cx="66" cy="41" rx="4" ry="2.5" fill="rgba(255,105,180,0.35)"/>
+        <!-- 小爱心 -->
+        <text x="70" y="22" font-size="8" fill="#ff69b4" opacity="0.8">&#9829;</text>
+        <text x="22" y="25" font-size="6" fill="#ff69b4" opacity="0.6">&#9829;</text>
+        <!-- 尾巴 -->
+        <path d="M 76 68 Q 90 55 85 42 Q 82 36 86 32" fill="none" stroke="#ffd6ee" stroke-width="5" stroke-linecap="round" style="animation: tailWag 1.5s ease-in-out infinite; transform-origin: 76px 68px;"/>
+        <!-- 前爪举起 - 卖萌 -->
+        <ellipse cx="35" cy="72" rx="7" ry="5" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1"/>
+        <ellipse cx="65" cy="72" rx="7" ry="5" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1"/>
+        <!-- 肉垫 -->
+        <circle cx="35" cy="73" r="2" fill="#ffb3d9"/>
+        <circle cx="33" cy="71" r="1" fill="#ffb3d9"/>
+        <circle cx="37" cy="71" r="1" fill="#ffb3d9"/>
+        <circle cx="65" cy="73" r="2" fill="#ffb3d9"/>
+        <circle cx="63" cy="71" r="1" fill="#ffb3d9"/>
+        <circle cx="67" cy="71" r="1" fill="#ffb3d9"/>
+      </svg>
+    </div>
+    <div class="cat-speech" id="catSpeech">我好渴～ 摸摸我，我会很开心喵～</div>
+  </div>
+</div>
+
+<!-- 表单弹窗 -->
+<div class="overlay" id="formOverlay">
+  <div class="toast-form">
+    <div class="toast-title">520 请你喝奶茶</div>
+    <div class="neon-line"></div>
+    
+    <div class="form-group">
+      <label class="form-label">你的名字 *</label>
+      <input class="form-input" id="fname" type="text" placeholder="叫什么呀～">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">收货地址 *</label>
+      <input class="form-input" id="faddress" type="text" placeholder="奶茶送到哪里呢？">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">手机号 *</label>
+      <input class="form-input" id="fcontact" type="tel" placeholder="填一下手机号吧～" maxlength="11" inputmode="numeric">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">想喝什么类型？</label>
+      <div class="form-options" id="typeOptions">
+        <div class="form-option" data-value="果茶">果茶</div>
+        <div class="form-option" data-value="奶茶">奶茶</div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">甜度</label>
+      <div class="form-options" id="sweetOptions">
+        <div class="form-option" data-value="无糖">无糖</div>
+        <div class="form-option" data-value="三分糖">三分糖</div>
+        <div class="form-option" data-value="五分糖">五分糖</div>
+        <div class="form-option" data-value="七分糖">七分糖</div>
+        <div class="form-option" data-value="全糖">全糖</div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">冰度</label>
+      <div class="form-options" id="iceOptions">
+        <div class="form-option" data-value="热饮">热饮</div>
+        <div class="form-option" data-value="去冰">去冰</div>
+        <div class="form-option" data-value="少冰">少冰</div>
+        <div class="form-option" data-value="加冰">加冰</div>
+        <div class="form-option" data-value="沙冰">沙冰</div>
+      </div>
+    </div>
+    
+    <button class="submit-btn" id="submitBtn">提交订单</button>
+  </div>
+</div>
+
+<!-- 成功提示 -->
+<div class="success-overlay" id="successOverlay">
+  <svg class="success-cat-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="42" r="22" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.2"/>
+    <polygon points="32,24 36,8 42,24" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.2"/>
+    <polygon points="58,24 64,8 68,24" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1.2"/>
+    <polygon points="34,22 37,12 41,23" fill="#ffb3d9"/>
+    <polygon points="59,22 63,12 67,23" fill="#ffb3d9"/>
+    <!-- 眯眯眼 - 超幸福 -->
+    <path d="M 36 39 Q 41 35 46 39" fill="none" stroke="#2d1b4e" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 54 39 Q 59 35 64 39" fill="none" stroke="#2d1b4e" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 48.5 46 L 50 48 L 51.5 46 Z" fill="#ff69b4"/>
+    <path d="M 44 49 Q 47 53 50 50 Q 53 53 56 49" fill="none" stroke="#ff82c8" stroke-width="1.3" stroke-linecap="round"/>
+    <ellipse cx="34" cy="44" rx="4" ry="2.5" fill="rgba(255,105,180,0.35)"/>
+    <ellipse cx="66" cy="44" rx="4" ry="2.5" fill="rgba(255,105,180,0.35)"/>
+    <!-- 举着奶茶 -->
+    <rect x="44" y="60" width="12" height="18" rx="3" fill="#9b30ff" opacity="0.8"/>
+    <rect x="44" y="58" width="12" height="4" rx="2" fill="#ff69b4"/>
+    <circle cx="50" cy="68" r="2" fill="#fff" opacity="0.6"/>
+    <ellipse cx="50" cy="82" rx="18" ry="12" fill="#ffd6ee" stroke="#ff82c8" stroke-width="1"/>
+    <text x="72" y="30" font-size="10" fill="#ff69b4">&#9829;</text>
+    <text x="20" y="35" font-size="7" fill="#c898d8">&#10022;</text>
+  </svg>
+  <div class="success-text">收到啦！奶茶马上安排～</div>
+  <div class="neon-line"></div>
+  <div class="success-sub">520快乐，今天也要开开心心的喵～</div>
+</div>
+
+<script>
+// ===== 钉钉机器人配置 =====
+const WEBHOOK_BASE = 'https://oapi.dingtalk.com/robot/send?access_token=542302a849715b40b344ebf816b6c29b5bdb7d365c66a8a90981c2d9b15c5894';
+const SECRET = 'SEC0d44e2519dcf06485de21f985b593de806ce480f9803b9548c5e4666d00ed7e4';
+
+// HMAC-SHA256 签名
+async function getDingTalkUrl() {
+  const timestamp = Date.now();
+  const strToSign = timestamp + '\n' + SECRET;
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', encoder.encode(SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(strToSign));
+  const base64Sign = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  const sign = encodeURIComponent(base64Sign);
+  return `${WEBHOOK_BASE}&timestamp=${timestamp}&sign=${sign}`;
+}
+
+// ===== 星空背景 =====
+(function createStars() {
+  const sf = document.getElementById('starfield');
+  for (let i = 0; i < 60; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 3 + 's';
+    star.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    star.style.width = star.style.height = (1 + Math.random() * 2) + 'px';
+    sf.appendChild(star);
+  }
+})();
+
+// ===== 第一页逻辑 =====
+const secretInput = document.getElementById('secretInput');
+const errorMsg = document.getElementById('errorMsg');
+const hintText = document.getElementById('hintText');
+let attempts = 0;
+
+secretInput.addEventListener('input', function() {
+  if (this.value.trim() === '我今天真可爱') {
+    showPage2();
+  }
+});
+
+secretInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    const val = this.value.trim();
+    if (val === '我今天真可爱') {
+      showPage2();
+    } else if (val.length > 0) {
+      attempts++;
+      if (attempts >= 1) {
+        // 第二次起直接给答案
+        errorMsg.textContent = '不对哦～ 答案是「我今天真可爱」';
+      }
+      errorMsg.classList.add('show');
+      setTimeout(() => errorMsg.classList.remove('show'), 3000);
+    }
+  }
+});
+
+// 移动端兼容：失焦时也检测
+secretInput.addEventListener('blur', function() {
+  if (this.value.trim() === '我今天真可爱') {
+    showPage2();
+  }
+});
+
+function showPage2() {
+  document.getElementById('page1').classList.remove('active');
+  document.getElementById('page2').classList.add('active');
+  createHearts();
+  setTimeout(() => {
+    document.getElementById('catSpeech').classList.add('show');
+  }, 4500);
+  // 开始播放背景音乐（用户已有交互，可自动播放）
+  startBGM();
+}
+
+// ===== 第二页：飘落爱心 =====
+function createHearts() {
+  const container = document.getElementById('heartsBg');
+  const symbols = ['♥', '♡', '✦', '✧', '˚', '⋆'];
+  for (let i = 0; i < 25; i++) {
+    const el = document.createElement('div');
+    el.className = 'heart-particle';
+    el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.fontSize = (12 + Math.random() * 16) + 'px';
+    el.style.color = `hsl(${320 + Math.random() * 40}, 80%, ${60 + Math.random() * 20}%)`;
+    el.style.animationDuration = (4 + Math.random() * 4) + 's';
+    el.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(el);
+  }
+}
+
+// ===== 点击猫猫弹出表单 =====
+document.getElementById('bigCat').addEventListener('click', function() {
+  document.getElementById('formOverlay').classList.add('active');
+});
+
+document.getElementById('formOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('active');
+});
+
+// ===== 选项点击 =====
+document.querySelectorAll('.form-options').forEach(group => {
+  group.addEventListener('click', function(e) {
+    const option = e.target.closest('.form-option');
+    if (!option) return;
+    group.querySelectorAll('.form-option').forEach(o => o.classList.remove('selected'));
+    option.classList.add('selected');
+  });
+});
+
+// ===== 提交 =====
+document.getElementById('submitBtn').addEventListener('click', function() {
+  const data = {
+    name: document.getElementById('fname').value.trim(),
+    address: document.getElementById('faddress').value.trim(),
+    phone: document.getElementById('fcontact').value.trim(),
+    type: getSelectedValue('typeOptions'),
+    sweet: getSelectedValue('sweetOptions'),
+    ice: getSelectedValue('iceOptions'),
+    time: new Date().toLocaleString('zh-CN')
+  };
+
+  if (!data.name || !data.address || !data.phone) {
+    showToast('名字、地址和手机号都要填哦～');
+    return;
+  }
+  if (!/^1\d{10}$/.test(data.phone)) {
+    showToast('手机号格式不太对哦～');
+    return;
+  }
+  if (!data.type) {
+    showToast('选一下想喝果茶还是奶茶呀～');
+    return;
+  }
+
+  sendData(data);
+  document.getElementById('formOverlay').classList.remove('active');
+  document.getElementById('successOverlay').classList.add('active');
+});
+
+function getSelectedValue(groupId) {
+  const selected = document.getElementById(groupId).querySelector('.form-option.selected');
+  return selected ? selected.dataset.value : '';
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.mini-toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'mini-toast';
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;top:20%;left:50%;transform:translateX(-50%);background:rgba(50,10,60,0.95);color:#ffcce8;padding:12px 24px;border-radius:20px;font-size:14px;z-index:999;border:1px solid rgba(255,130,200,0.3);backdrop-filter:blur(10px);';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function sendData(data) {
+  const msg = `🧋 520奶茶订单来啦！\n\n姓名：${data.name}\n地址：${data.address}\n手机号：${data.phone}\n类型：${data.type}\n甜度：${data.sweet || '未选'}\n冰度：${data.ice || '未选'}\n提交时间：${data.time}`;
+
+  // 发送到钉钉机器人
+  sendToDingTalk(msg, data);
+
+  // 备份：复制到剪贴板 + 控制台
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg).catch(() => {});
+  }
+  console.log('📋 奶茶订单:', JSON.stringify(data, null, 2));
+}
+
+async function sendToDingTalk(msg, data) {
+  try {
+    const url = await getDingTalkUrl();
+    const body = JSON.stringify({
+      msgtype: 'markdown',
+      markdown: {
+        title: '520奶茶订单',
+        text: `### 🧋 520奶茶订单来啦！\n\n` +
+              `- **姓名**：${data.name}\n` +
+              `- **地址**：${data.address}\n` +
+              `- **手机号**：${data.phone}\n` +
+              `- **类型**：${data.type}\n` +
+              `- **甜度**：${data.sweet || '未选'}\n` +
+              `- **冰度**：${data.ice || '未选'}\n` +
+              `- **提交时间**：${data.time}\n`
+      }
+    });
+
+    // 尝试直接发送
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body
+    });
+    if (res.ok) {
+      console.log('✅ 钉钉发送成功');
+    }
+  } catch (e) {
+    // CORS 降级：用 sendBeacon 尝试
+    try {
+      const url2 = await getDingTalkUrl();
+      const blob = new Blob([JSON.stringify({
+        msgtype: 'text',
+        text: { content: msg }
+      })], { type: 'application/json' });
+      navigator.sendBeacon(url2, blob);
+      console.log('📡 已通过 sendBeacon 发送');
+    } catch (e2) {
+      console.log('⚠️ 发送失败，数据已复制到剪贴板', e2);
+    }
+  }
+}
+
+// ===== 背景音乐：Web Audio API 生成轻柔旋律 =====
+let bgmStarted = false;
+function startBGM() {
+  if (bgmStarted) return;
+  bgmStarted = true;
+
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const masterGain = ctx.createGain();
+  masterGain.gain.value = 0.3;
+  masterGain.connect(ctx.destination);
+
+  // 柔和混响效果
+  const convolver = ctx.createConvolver();
+  const reverbLen = 2 * ctx.sampleRate;
+  const reverbBuf = ctx.createBuffer(2, reverbLen, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = reverbBuf.getChannelData(ch);
+    for (let i = 0; i < reverbLen; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / reverbLen, 2.5);
+    }
+  }
+  convolver.buffer = reverbBuf;
+
+  const reverbGain = ctx.createGain();
+  reverbGain.gain.value = 0.4;
+  convolver.connect(reverbGain);
+  reverbGain.connect(masterGain);
+
+  // 音符频率
+  const notes = {
+    C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00,
+    A4: 440.00, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25,
+    F5: 698.46, G5: 783.99
+  };
+
+  // 轻柔浪漫旋律 (循环)
+  const melody = [
+    ['E4',0.8], ['G4',0.8], ['A4',1.2], ['G4',0.6],
+    ['E4',0.8], ['D4',0.8], ['C4',1.6],
+    ['D4',0.8], ['E4',0.8], ['G4',1.2], ['A4',0.6],
+    ['G4',0.8], ['E4',0.8], ['D4',1.6],
+    ['E4',0.8], ['A4',0.8], ['G4',1.2], ['E4',0.6],
+    ['D4',0.8], ['E4',0.8], ['G4',1.6],
+    ['A4',0.8], ['G4',0.8], ['E4',1.2], ['D4',0.6],
+    ['C4',0.8], ['D4',0.8], ['E4',2.0],
+  ];
+
+  // 和弦伴奏
+  const chords = [
+    [['C4','E4','G4'], 3.2],
+    [['D4','F4','A4'], 3.2],
+    [['E4','G4','B4'], 3.2],
+    [['C4','E4','G4'], 3.2],
+    [['A4','C5','E5'], 3.2],
+    [['G4','B4','D5'], 3.2],
+    [['F4','A4','C5'], 3.2],
+    [['C4','E4','G4'], 3.2],
+  ];
+
+  function playNote(freq, startTime, duration, type = 'sine', gainVal = 0.15) {
+    const osc = ctx.createOscillator();
+    const noteGain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    
+    noteGain.gain.setValueAtTime(0, startTime);
+    noteGain.gain.linearRampToValueAtTime(gainVal, startTime + 0.05);
+    noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.9);
+    
+    osc.connect(noteGain);
+    noteGain.connect(masterGain);
+    noteGain.connect(convolver);
+    
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+  }
+
+  function playLoop(startOffset) {
+    let t = ctx.currentTime + startOffset;
+    
+    // 旋律
+    for (const [note, dur] of melody) {
+      playNote(notes[note], t, dur * 0.9, 'sine', 0.12);
+      t += dur * 0.5;
+    }
+
+    // 和弦
+    let ct = ctx.currentTime + startOffset;
+    for (const [chord, dur] of chords) {
+      for (const note of chord) {
+        playNote(notes[note] * 0.5, ct, dur * 0.85, 'triangle', 0.04);
+      }
+      ct += dur;
+    }
+
+    // 计算循环总时长并再次调度
+    const totalDuration = melody.reduce((sum, [,d]) => sum + d * 0.5, 0);
+    setTimeout(() => playLoop(0.2), totalDuration * 1000);
+  }
+
+  // 淡入开始
+  masterGain.gain.setValueAtTime(0, ctx.currentTime);
+  masterGain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 2);
+  playLoop(0);
+}
+</script>
+</body>
+</html>
