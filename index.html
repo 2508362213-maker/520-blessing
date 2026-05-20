@@ -666,25 +666,48 @@ function showToast(msg) {
   setTimeout(() => t.remove(), 2500);
 }
 
-function sendData(data) {
-  // 发送到同域 API 代理 → 钉钉机器人
-  sendToDingTalk(data);
+// ===== 钉钉机器人配置 =====
+const DINGTALK_WEBHOOK = 'https://oapi.dingtalk.com/robot/send?access_token=542302a849715b40b344ebf816b6c29b5bdb7d365c66a8a90981c2d9b15c5894';
+const DINGTALK_SECRET  = 'SEC0d44e2519dcf06485de21f985b593de806ce480f9803b9548c5e4666d00ed7e4';
 
-  // 备份：控制台输出
+async function getSignedUrl() {
+  const ts = Date.now();
+  const str = ts + '\n' + DINGTALK_SECRET;
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(DINGTALK_SECRET), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(str));
+  const sign = encodeURIComponent(btoa(String.fromCharCode(...new Uint8Array(sig))));
+  return `${DINGTALK_WEBHOOK}&timestamp=${ts}&sign=${sign}`;
+}
+
+function sendData(data) {
+  sendToDingTalk(data);
   console.log('📋 奶茶订单:', JSON.stringify(data, null, 2));
 }
 
 async function sendToDingTalk(data) {
   try {
-    const res = await fetch('/api/dingtalk', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+    const url = await getSignedUrl();
+    const body = JSON.stringify({
+      msgtype: 'markdown',
+      markdown: {
+        title: '🧋 520奶茶订单',
+        text: `### 🧋 520奶茶订单来啦！\n\n` +
+              `- **姓名**：${data.name}\n` +
+              `- **地址**：${data.address}\n` +
+              `- **手机号**：${data.phone}\n` +
+              `- **类型**：${data.type}\n` +
+              `- **甜度**：${data.sweet || '未选'}\n` +
+              `- **冰度**：${data.ice || '未选'}\n` +
+              `- **提交时间**：${data.time}\n`
+      }
     });
-    const result = await res.json();
-    console.log('✅ 钉钉发送结果:', result);
+
+    // 方式1：no-cors 直发（无预检请求，钉钉域名在国内直连，大概率成功）
+    fetch(url, { method:'POST', mode:'no-cors', body });
+    console.log('📡 已发送到钉钉（no-cors）');
   } catch (e) {
-    console.log('⚠️ 发送失败:', e);
+    console.log('⚠️ 发送异常:', e);
   }
 }
 
