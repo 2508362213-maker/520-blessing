@@ -376,7 +376,7 @@ body {
   <div class="input-title">嘿～想看点好东西吗？<br>先说个暗号吧～</div>
   <div class="input-hint" id="hintText">提示：夸夸自己 ~</div>
   <input class="magic-input" id="secretInput" type="text" placeholder="输入暗号..." autocomplete="off">
-  <div class="error-msg" id="errorMsg">不对哦～ 答案是「我今天真可爱」</div>
+  <div class="error-msg" id="errorMsg">不对哦～ 答案是「老子最牛」</div>
 </div>
 
 <!-- 第二页：猫猫祝福 -->
@@ -546,7 +546,7 @@ const hintText = document.getElementById('hintText');
 let attempts = 0;
 
 secretInput.addEventListener('input', function() {
-  if (this.value.trim() === '我今天真可爱') {
+  if (this.value.trim() === '老子最牛') {
     showPage2();
   }
 });
@@ -554,13 +554,12 @@ secretInput.addEventListener('input', function() {
 secretInput.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     const val = this.value.trim();
-    if (val === '我今天真可爱') {
+    if (val === '老子最牛') {
       showPage2();
     } else if (val.length > 0) {
       attempts++;
       if (attempts >= 1) {
-        // 第二次起直接给答案
-        errorMsg.textContent = '不对哦～ 答案是「我今天真可爱」';
+        errorMsg.textContent = '不对哦～ 答案是「老子最牛」';
       }
       errorMsg.classList.add('show');
       setTimeout(() => errorMsg.classList.remove('show'), 3000);
@@ -570,7 +569,7 @@ secretInput.addEventListener('keydown', function(e) {
 
 // 移动端兼容：失焦时也检测
 secretInput.addEventListener('blur', function() {
-  if (this.value.trim() === '我今天真可爱') {
+  if (this.value.trim() === '老子最牛') {
     showPage2();
   }
 });
