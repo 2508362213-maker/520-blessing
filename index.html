@@ -520,23 +520,7 @@ body {
 </div>
 
 <script>
-// ===== 钉钉机器人配置 =====
-const WEBHOOK_BASE = 'https://oapi.dingtalk.com/robot/send?access_token=542302a849715b40b344ebf816b6c29b5bdb7d365c66a8a90981c2d9b15c5894';
-const SECRET = 'SEC0d44e2519dcf06485de21f985b593de806ce480f9803b9548c5e4666d00ed7e4';
-
-// HMAC-SHA256 签名
-async function getDingTalkUrl() {
-  const timestamp = Date.now();
-  const strToSign = timestamp + '\n' + SECRET;
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw', encoder.encode(SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  );
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(strToSign));
-  const base64Sign = btoa(String.fromCharCode(...new Uint8Array(signature)));
-  const sign = encodeURIComponent(base64Sign);
-  return `${WEBHOOK_BASE}&timestamp=${timestamp}&sign=${sign}`;
-}
+// ===== 钉钉机器人：通过服务端 API 代理发送（避免浏览器跨域问题）=====
 
 // ===== 星空背景 =====
 (function createStars() {
@@ -683,58 +667,24 @@ function showToast(msg) {
 }
 
 function sendData(data) {
-  const msg = `🧋 520奶茶订单来啦！\n\n姓名：${data.name}\n地址：${data.address}\n手机号：${data.phone}\n类型：${data.type}\n甜度：${data.sweet || '未选'}\n冰度：${data.ice || '未选'}\n提交时间：${data.time}`;
+  // 发送到同域 API 代理 → 钉钉机器人
+  sendToDingTalk(data);
 
-  // 发送到钉钉机器人
-  sendToDingTalk(msg, data);
-
-  // 备份：复制到剪贴板 + 控制台
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(msg).catch(() => {});
-  }
+  // 备份：控制台输出
   console.log('📋 奶茶订单:', JSON.stringify(data, null, 2));
 }
 
-async function sendToDingTalk(msg, data) {
+async function sendToDingTalk(data) {
   try {
-    const url = await getDingTalkUrl();
-    const body = JSON.stringify({
-      msgtype: 'markdown',
-      markdown: {
-        title: '520奶茶订单',
-        text: `### 🧋 520奶茶订单来啦！\n\n` +
-              `- **姓名**：${data.name}\n` +
-              `- **地址**：${data.address}\n` +
-              `- **手机号**：${data.phone}\n` +
-              `- **类型**：${data.type}\n` +
-              `- **甜度**：${data.sweet || '未选'}\n` +
-              `- **冰度**：${data.ice || '未选'}\n` +
-              `- **提交时间**：${data.time}\n`
-      }
-    });
-
-    // 尝试直接发送
-    const res = await fetch(url, {
+    const res = await fetch('/api/dingtalk', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: body
+      body: JSON.stringify(data)
     });
-    if (res.ok) {
-      console.log('✅ 钉钉发送成功');
-    }
+    const result = await res.json();
+    console.log('✅ 钉钉发送结果:', result);
   } catch (e) {
-    // CORS 降级：用 sendBeacon 尝试
-    try {
-      const url2 = await getDingTalkUrl();
-      const blob = new Blob([JSON.stringify({
-        msgtype: 'text',
-        text: { content: msg }
-      })], { type: 'application/json' });
-      navigator.sendBeacon(url2, blob);
-      console.log('📡 已通过 sendBeacon 发送');
-    } catch (e2) {
-      console.log('⚠️ 发送失败，数据已复制到剪贴板', e2);
-    }
+    console.log('⚠️ 发送失败:', e);
   }
 }
 
